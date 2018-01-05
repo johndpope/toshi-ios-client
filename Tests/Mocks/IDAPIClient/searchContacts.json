@@ -10,7 +10,7 @@
           "about": "",
           "avatar": "https://token-id-service-development.herokuapp.com/avatar/0x6f70800cb47f7f84b6c71b3693fc02595eae7378.png",
           "location": "Amsterdam",
-          "name": "Marijn Schilling"
+          "name": "Search result 1"
         }
       ],
       "username": "marijnschilling",
@@ -32,15 +32,15 @@
         {
           "about": "",
           "avatar": "https://token-id-service-development.herokuapp.com/avatar/0x6f70800cb47f7f84b6c71b3693fc02595eae7378.png",
-          "location": "Amsterdam",
-          "name": "Marijn Schilling"
+          "location": "Springfield",
+          "name": "Search result 2",
         }
       ],
-      "username": "marijnschilling",
+      "username": "homersimpson",
       "review_count": 1,
       "average_rating": 3,
       "toshi_id": "0x6f70800cb47f7f84b6c71b3693fc02595eae7378",
-      "location": "Amsterdam",
+      "location": "Springfield",
       "about": "",
       "avatar": "https://token-id-service-development.herokuapp.com/avatar/0x6f70800cb47f7f84b6c71b3693fc02595eae7378.png",
       "token_id": "0x6f70800cb47f7f84b6c71b3693fc02595eae7378",

@@ -28,14 +28,16 @@ class RatingsClientTests: QuickSpec {
 
             context("Happy path 😎") {
 
-                it("fetches the top rated apps") {
+                it("submits a rating") {
                     let mockTeapot = MockTeapot(bundle: Bundle(for: RatingsClientTests.self), mockFilename: "")
                     mockTeapot.overrideEndPoint("timestamp", withFilename: "timestamp")
                     subject = RatingsClient(teapot: mockTeapot)
 
                     waitUntil { done in
-                        subject.submit(userId: "testUseID", rating: 4, review: "") { success, _ in
-                            expect(success).to(beTruthy())
+                        subject.submit(userId: "testUseID", rating: 4, review: "") { success, error in
+                            expect(success).to(beTrue())
+                            expect(error).to(beNil())
+                            
                             done()
                         }
                     }
@@ -48,11 +50,17 @@ class RatingsClientTests: QuickSpec {
 
                     waitUntil { done in
                         subject.scores(for: "testUseID") { score in
+                            expect(score.reviewCount).to(equal(5))
+                            expect(score.reputationScore).to(equal(2.9))
+                            
                             expect(score.stars.one).to(equal(0))
                             expect(score.stars.two).to(equal(0))
                             expect(score.stars.three).to(equal(2))
                             expect(score.stars.four).to(equal(0))
                             expect(score.stars.five).to(equal(3))
+                            
+                            expect(score.averageRating).to(equal(4.2))
+                            
                             done()
                         }
                     }
@@ -61,14 +69,18 @@ class RatingsClientTests: QuickSpec {
 
             context("⚠ Unauthorized 🔒") {
 
-                it("fetches the top rated apps") {
+                it("submits a rating") {
                     let mockTeapot = MockTeapot(bundle: Bundle(for: RatingsClientTests.self), mockFilename: "", statusCode: .unauthorized)
                     mockTeapot.overrideEndPoint("timestamp", withFilename: "timestamp")
                     subject = RatingsClient(teapot: mockTeapot)
 
                     waitUntil { done in
-                        subject.submit(userId: "testUseID", rating: 4, review: "") { success, _ in
+                        subject.submit(userId: "testUseID", rating: 4, review: "") { success, error in
                             expect(success).to(beFalse())
+                            expect(error).toNot(beNil())
+                            
+                            expect(error?.responseStatus).to(equal(401))
+                            
                             done()
                         }
                     }
@@ -81,11 +93,17 @@ class RatingsClientTests: QuickSpec {
 
                     waitUntil { done in
                         subject.scores(for: "testUseID") { score in
+                            expect(score.reviewCount).to(equal(0))
+                            expect(score.reputationScore).to(equal(0))
+                            
                             expect(score.stars.one).to(equal(0))
                             expect(score.stars.two).to(equal(0))
                             expect(score.stars.three).to(equal(0))
                             expect(score.stars.four).to(equal(0))
                             expect(score.stars.five).to(equal(0))
+                            
+                            expect(score.averageRating).to(equal(0))
+
                             done()
                         }
                     }

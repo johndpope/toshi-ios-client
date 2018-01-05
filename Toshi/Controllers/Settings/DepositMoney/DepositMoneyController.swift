@@ -41,7 +41,7 @@ class DepositMoneyController: UIViewController {
             .header(Localized("deposit_money_header_text")),
             .bulletPoint(Localized("deposit_money_1_title"), String(format: Localized("deposit_money_1_text"), Cereal.shared.paymentAddress)),
             .copyToClipBoard(Localized("copy_to_clipboard_action"), Localized("copy_to_clipboard_feedback"), #selector(copyToClipBoard(_:))),
-            .QRCode(UIImage.imageQRCode(for: "\(QRCodeController.addUsernameBasePath)\(username)", resizeRate: 20.0)),
+            .QRCode(UIImage.imageQRCode(for: "\(QRCodeController.paymentWithAddressPath)\(Cereal.shared.paymentAddress)", resizeRate: 20.0)),
             .bulletPoint(Localized("deposit_money_2_title"), Localized("deposit_money_2_text")),
             .bulletPoint(Localized("deposit_money_3_title"), Localized("deposit_money_3_text")),
             .bulletPoint(Localized("deposit_money_4_title"), Localized("deposit_money_4_text"))

@@ -21,6 +21,12 @@ import Teapot
 @testable import Toshi
 
 class EthereumAPIClientTests: QuickSpec {
+    
+    let parameters: [String: Any] = [
+        "from": "0x011c6dd9565b8b83e6a9ee3f06e89ece3251ef2f",
+        "to": "0x011c6dd9565b8b83e6a9ee3f06e89ece3251ef2f",
+        "value": "0x330a41d05c8a780a"
+    ]
 
     override func spec() {
         describe("the Ethereum API Client") {
@@ -31,16 +37,12 @@ class EthereumAPIClientTests: QuickSpec {
                     let mockTeapot = MockTeapot(bundle: Bundle(for: EthereumAPIClientTests.self), mockFilename: "createUnsignedTransaction")
                     subject = EthereumAPIClient(mockTeapot: mockTeapot)
 
-                    let parameters: [String: Any] = [
-                        "from": "0x011c6dd9565b8b83e6a9ee3f06e89ece3251ef2f",
-                        "to": "0x011c6dd9565b8b83e6a9ee3f06e89ece3251ef2f",
-                        "value": "0x330a41d05c8a780a"
-                    ]
-
                     waitUntil { done in
-                        subject.createUnsignedTransaction(parameters: parameters) { transaction, error in
+                        subject.createUnsignedTransaction(parameters: self.parameters) { transaction, error in
                             expect(transaction).toNot(beNil())
                             expect(error).to(beNil())
+                            
+                            expect(transaction).to(equal("0xf085746f6b658d8504a817c800825208945c156634bc3aed611e71550fb8a54480b480cd3b8718972b8c63638a80748080"))
                             done()
                         }
                     }
@@ -51,18 +53,15 @@ class EthereumAPIClientTests: QuickSpec {
                     mockTeapot.overrideEndPoint("timestamp", withFilename: "timestamp")
                     subject = EthereumAPIClient(mockTeapot: mockTeapot)
 
-                    let parameters: [String: Any] = [
-                        "from": "0x011c6dd9565b8b83e6a9ee3f06e89ece3251ef2f",
-                        "to": "0x011c6dd9565b8b83e6a9ee3f06e89ece3251ef2f",
-                        "value": "0x330a41d05c8a780a"
-                    ]
-
                     waitUntil { done in
-                        subject.transactionSkeleton(for: parameters) { skeleton, error in
+                        subject.transactionSkeleton(for: self.parameters) { skeleton, error in
+                            expect(skeleton).toNot(beNil())
+                            expect(error).to(beNil())
+
                             expect(skeleton.gas).to(equal("0x5208"))
                             expect(skeleton.gasPrice).to(equal("0xa02ffee00"))
                             expect(skeleton.transaction).to(equal("0xf085746f6b656e850a02ffee0082520894011c6dd9565b8b83e6a9ee3f06e89ece3251ef2f8712103c5eee63dc80748080"))
-                            expect(error).to(beNil())
+                            
                             done()
                         }
                     }
@@ -76,10 +75,13 @@ class EthereumAPIClientTests: QuickSpec {
                     waitUntil(timeout: 3) { done in
                         let originalTransaction = "0xf085746f6b658d8504a817c800825208945c156634bc3aed611e71550fb8a54480b480cd3b8718972b8c63638a80748080"
                         let transactionSignature = "0x4f80931676670df5b7a919aeaa56ae1d0c2db1792e6e252ee66a30007022200e44f61e710dbd9b24bed46338bed73f21e3a1f28ac791452fde598913867ebbb701"
-                        subject.sendSignedTransaction(originalTransaction: originalTransaction, transactionSignature: transactionSignature) { success, json, error in
-                            expect(success).to(beTruthy())
-                            expect(json).toNot(beNil())
+                        subject.sendSignedTransaction(originalTransaction: originalTransaction, transactionSignature: transactionSignature) { success, transactionHash, error in
+                            expect(success).to(beTrue())
+                            expect(transactionHash).toNot(beNil())
                             expect(error).to(beNil())
+                            
+                            expect(transactionHash).to(equal("0xe649f968c44d293128b0fa79a9ccba81ed32d72d34205330aa21a77ab6457ae5"))
+                            
                             done()
                         }
                     }
@@ -90,8 +92,12 @@ class EthereumAPIClientTests: QuickSpec {
                     subject = EthereumAPIClient(mockTeapot: mockTeapot)
 
                     waitUntil { done in
-                        subject.getBalance(address: "0x1ad0bb2d14595fa6ad885e53eaaa6c82339f9b98") { _, error in
+                        subject.getBalance(address: "0x1ad0bb2d14595fa6ad885e53eaaa6c82339f9b98") { fetchedBalance, error in
+                            expect(fetchedBalance).toNot(beNil())
                             expect(error).to(beNil())
+                            
+                            expect(fetchedBalance).to(equal(3677824408863012874))
+                            
                             done()
                         }
                     }
@@ -103,17 +109,13 @@ class EthereumAPIClientTests: QuickSpec {
                     let mockTeapot = MockTeapot(bundle: Bundle(for: EthereumAPIClientTests.self), mockFilename: "createUnsignedTransaction", statusCode: .unauthorized)
                     subject = EthereumAPIClient(mockTeapot: mockTeapot)
 
-                    let parameters: [String: Any] = [
-                        "from": "0x011c6dd9565b8b83e6a9ee3f06e89ece3251ef2f",
-                        "to": "0x011c6dd9565b8b83e6a9ee3f06e89ece3251ef2f",
-                        "value": 1000
-                    ]
-
                     waitUntil { done in
-                        subject.createUnsignedTransaction(parameters: parameters) { transaction, error in
-                            expect(error).toNot(beNil())
-                            expect(error!.description).to(equal("Error creating transaction"))
+                        subject.createUnsignedTransaction(parameters: self.parameters) { transaction, error in
                             expect(transaction).to(beNil())
+                            expect(error).toNot(beNil())
+                            
+                            expect(error?.description).to(equal("Error creating transaction"))
+                            
                             done()
                         }
                     }
@@ -124,18 +126,15 @@ class EthereumAPIClientTests: QuickSpec {
                     mockTeapot.overrideEndPoint("timestamp", withFilename: "timestamp")
                     subject = EthereumAPIClient(mockTeapot: mockTeapot)
 
-                    let parameters: [String: Any] = [
-                        "from": "0x011c6dd9565b8b83e6a9ee3f06e89ece3251ef2f",
-                        "to": "0x011c6dd9565b8b83e6a9ee3f06e89ece3251ef2f",
-                        "value": "0x330a41d05c8a780a"
-                    ]
-
                     waitUntil { done in
-                        subject.transactionSkeleton(for: parameters) { skeleton, error in
+                        subject.transactionSkeleton(for: self.parameters) { skeleton, error in
+                            expect(skeleton).toNot(beNil())
+                            expect(error).toNot(beNil())
+
                             expect(skeleton.gas).to(beNil())
                             expect(skeleton.gasPrice).to(beNil())
                             expect(skeleton.transaction).to(beNil())
-                            expect(error).toNot(beNil())
+                            
                             done()
                         }
                     }
@@ -149,11 +148,13 @@ class EthereumAPIClientTests: QuickSpec {
                     waitUntil(timeout: 3) { done in
                         let originalTransaction = "0xf085746f6b658d8504a817c800825208945c156634bc3aed611e71550fb8a54480b480cd3b8718972b8c63638a80748080"
                         let transactionSignature = "0x4f80931676670df5b7a919aeaa56ae1d0c2db1792e6e252ee66a30007022200e44f61e710dbd9b24bed46338bed73f21e3a1f28ac791452fde598913867ebbb701"
-                        subject.sendSignedTransaction(originalTransaction: originalTransaction, transactionSignature: transactionSignature) { success, json, error in
-                            expect(error).toNot(beNil())
-                            expect(error!.description).to(equal("An error occurred: request response status reported an issue. Status code: 401."))
+                        subject.sendSignedTransaction(originalTransaction: originalTransaction, transactionSignature: transactionSignature) { success, transactionHash, error in
                             expect(success).to(beFalse())
-                            expect(json).to(beNil())
+                            expect(transactionHash).to(beNil())
+                            expect(error).toNot(beNil())
+
+                            expect(error?.description).to(equal("An error occurred: request response status reported an issue. Status code: 401."))
+                            
                             done()
                         }
                     }
@@ -165,10 +166,11 @@ class EthereumAPIClientTests: QuickSpec {
 
                     waitUntil { done in
                         subject.getBalance(address: "0x1ad0bb2d14595fa6ad885e53eaaa6c82339f9b98") { number, error in
-                            expect(error).toNot(beNil())
-                            expect(error!.description).to(equal("An error occurred: request response status reported an issue. Status code: 401."))
-                            expect(error).toNot(beNil())
                             expect(number).to(equal(0))
+                            expect(error).toNot(beNil())
+
+                            expect(error?.description).to(equal("An error occurred: request response status reported an issue. Status code: 401."))
+                            
                             done()
                         }
                     }

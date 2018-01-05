@@ -22,7 +22,7 @@ class QRCodeController: UIViewController {
     static let addUsernameBasePath = "https://app.toshi.org/add/"
     static let addUserPath = "/add/"
     static let paymentWithUsernamePath = "/pay/"
-    static let paymentWithAddressPath = "/ethereum:"
+    static let paymentWithAddressPath = "ethereum:"
 
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .default

@@ -310,15 +310,9 @@ extension SOFAWebController: WKScriptMessageHandler {
 
     private func sendSignedTransaction(_ transaction: String, with callbackId: String, completion: @escaping ((String, String) -> Void)) {
 
-        etherAPIClient.sendSignedTransaction(signedTransaction: transaction) { success, json, error in
-            guard success, let json = json?.dictionary else {
+        etherAPIClient.sendSignedTransaction(signedTransaction: transaction) { success, transactionHash, error in
+            guard success, let txHash = transactionHash else {
                 completion(callbackId, "{\\\"error\\\": \\\"\(error?.description ?? "Error sending transaction")\\\"}")
-
-                return
-            }
-
-            guard let txHash = json["tx_hash"] as? String else {
-                completion(callbackId, "{\\\"error\\\": \\\"Error recovering transaction hash\\\"}")
 
                 return
             }

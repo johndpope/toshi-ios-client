@@ -96,7 +96,7 @@ class EthereumAPIClient: NSObject {
         }
     }
 
-    func sendSignedTransaction(originalTransaction: String, transactionSignature: String, completion: @escaping ((_ success: Bool, _ json: RequestParameter?, _ error: ToshiError?) -> Void)) {
+    func sendSignedTransaction(originalTransaction: String, transactionSignature: String, completion: @escaping ((_ success: Bool, _ transactionHash: String?, _ error: ToshiError?) -> Void)) {
         let params = [
             "tx": originalTransaction,
             "signature": transactionSignature
@@ -104,14 +104,14 @@ class EthereumAPIClient: NSObject {
         sendSignedTransaction(params: params, completion: completion)
     }
 
-    func sendSignedTransaction(signedTransaction: String, completion: @escaping ((_ success: Bool, _ json: RequestParameter?, _ error: ToshiError?) -> Void)) {
+    func sendSignedTransaction(signedTransaction: String, completion: @escaping ((_ success: Bool, _ transactionHash: String?, _ error: ToshiError?) -> Void)) {
         let params = [
             "tx": signedTransaction
         ]
         sendSignedTransaction(params: params, completion: completion)
     }
 
-    private func sendSignedTransaction(params: [String: String], completion: @escaping ((_ success: Bool, _ json: RequestParameter?, _ error: ToshiError?) -> Void)) {
+    private func sendSignedTransaction(params: [String: String], completion: @escaping ((_ success: Bool, _ transactionHash: String?, _ error: ToshiError?) -> Void)) {
 
         timestamp(activeTeapot) { timestamp, error in
             guard let timestamp = timestamp else {
@@ -147,7 +147,12 @@ class EthereumAPIClient: NSObject {
                 DispatchQueue.main.async {
                     switch result {
                     case .success(let json, _):
-                        completion(true, json, nil)
+                        guard let hash = json?.dictionary?["tx_hash"] as? String else {
+                            CrashlyticsLogger.log("Error recovering transaction hash")
+                            fatalError("Error recovering transaction hash")
+                        }
+                        
+                        completion(true, hash, nil)
                     case .failure(let json, _, let error):
                         guard let jsonError = (json?.dictionary?["errors"] as? [[String: Any]])?.first else {
                             completion(false, nil, ToshiError(withTeapotError: error))

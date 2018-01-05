@@ -275,7 +275,7 @@ extension ProfileViewController: PaymentControllerDelegate {
 
         let signedTransaction = "0x\(Cereal.shared.signWithWallet(hex: transaction))"
 
-        etherAPIClient.sendSignedTransaction(originalTransaction: transaction, transactionSignature: signedTransaction) { [weak self] success, json, error in
+        etherAPIClient.sendSignedTransaction(originalTransaction: transaction, transactionSignature: signedTransaction) { [weak self] success, transactionHash, error in
             guard let strongSelf = self else { return }
 
             strongSelf.hideActivityIndicator()
@@ -286,10 +286,7 @@ extension ProfileViewController: PaymentControllerDelegate {
                 return
             }
 
-            if let json = json?.dictionary, let value = parameters["value"] as? String {
-                guard let txHash = json["tx_hash"] as? String else {
-                    CrashlyticsLogger.log("Error recovering transaction hash.")
-                    fatalError("Error recovering transaction hash.") }
+            if let txHash = transactionHash, let value = parameters["value"] as? String {
                 let payment = SofaPayment(txHash: txHash, valueHex: value)
 
                 // send message to thread

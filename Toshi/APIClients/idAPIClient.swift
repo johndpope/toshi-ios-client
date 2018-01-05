@@ -430,6 +430,64 @@ typealias DappCompletion = (_ dapps: [Dapp]?, _ error: ToshiError?) -> Void
             }
         }
     }
+    
+    /// Fetches the TokenUser details for an array of raw addresses.
+    ///
+    /// - Parameters:
+    ///   - addresses: An array of raw addresses as strings.
+    ///                NOTE: Requests with more than 1000 addresses will error in dev and only fetch the first 1000 in prod - requests this large should be broken into multiple requests.
+    ///   - completion: The completion closure to fire when the request completes.
+    ///                 - users: The fetched users, or nil.
+    ///                 - error: Any error encountered, or nil.
+    func fetchUsers(with addresses: [String], completion: @escaping TokenUserResults) {
+        guard addresses.count > 0 else {
+            // No addresses to actually fetch = no users to return.
+            completion([], nil)
+            
+            return
+        }
+        
+        // Due to limits on URL length, you can't request more than 1000 users at once.
+        // https://github.com/toshiapp/toshi-ios-client/pull/674#discussion_r159873041
+        let addressCountLimit = 1000
+        
+        var addressesToFetch = addresses
+        if addresses.count > addressCountLimit {
+            assertionFailure("Please break this request into batches of less than \(addressCountLimit).")
+            
+            // In prod: Fetch the first batch up to the limit.
+            addressesToFetch = Array(addresses[0..<addressCountLimit])
+        }
+        
+        let fetchString = "?toshi_id=" + addressesToFetch.joined(separator: "&toshi_id=")
+
+        self.teapot.get("/v1/search/user\(fetchString)") { result in
+            switch result {
+            case .success(let json, _):
+                guard
+                    let dictionary = json?.dictionary,
+                    let userJSONArray = dictionary["results"] as? [[String: Any]] else {
+                        DispatchQueue.main.async {
+                            completion(nil, .invalidPayload)
+                        }
+                        
+                        return
+                }
+                
+                let results = userJSONArray.map { TokenUser(json: $0) }
+                
+                results.forEach { AvatarManager.shared.downloadAvatar(for: $0.avatarPath) }
+                
+                DispatchQueue.main.async {
+                    completion(results, nil)
+                }
+            case .failure(_, _, let error):
+                DispatchQueue.main.async {
+                    completion(nil, ToshiError(withTeapotError: error))
+                }
+            }
+        }
+    }
 
     func getTopRatedPublicUsers(limit: Int = 10, completion: @escaping TokenUserResults) {
 
@@ -627,14 +685,14 @@ typealias DappCompletion = (_ dapps: [Dapp]?, _ error: ToshiError?) -> Void
     func getDapps(limit: Int = 10, completion: @escaping DappCompletion) {
         let path = "/v1/dapps?limit=\(limit)"
         teapot.get(path) { result in
-            var dapps: [Dapp] = []
+            var dapps: [Dapp]?
             var resultError: ToshiError?
             
             switch result {
             case .success(let json, _):
                 guard let data = json?.data else {
                     DispatchQueue.main.async {
-                        completion([], nil)
+                        completion(nil, .invalidPayload)
                     }
                     return
                 }
@@ -645,7 +703,7 @@ typealias DappCompletion = (_ dapps: [Dapp]?, _ error: ToshiError?) -> Void
                     dappResults = try jsonDecoder.decode(DappResults.self, from: data)
                 } catch {
                     DispatchQueue.main.async {
-                        completion(nil, .invalidPayload)
+                        completion(nil, .invalidResponseJSON)
                     }
                     return
                 }

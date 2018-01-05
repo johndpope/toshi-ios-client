@@ -32,9 +32,29 @@ class AppsAPIClientTests: QuickSpec {
                     subject = AppsAPIClient(teapot: mockTeapot, cacheEnabled: false)
 
                     waitUntil { done in
-                        subject.getTopRatedApps { users, _ in
-                            expect(users?.first?.about).to(equal("The toppest of all the apps"))
+                        subject.getTopRatedApps { users, error in
+                            expect(users).toNot(beNil())
+                            expect(error).to(beNil())
+
+                            guard let app = users?.first else {
+                                fail("No user found!")
+                                done()
+                                
+                                return
+                            }
                             
+                            expect(app.about).to(equal("The toppest of all the apps"))
+                            expect(app.avatarPath).to(equal("https://token-id-service-development.herokuapp.com/avatar/0x8f9bdb7f562ccdedf3c24cf25e9cece9df62138b.png"))
+                            expect(app.averageRating).to(equal(1.0))
+                            expect(app.isApp).to(equal(true))
+                            expect(app.location).to(equal("teh internets"))
+                            expect(app.name).to(equal("Test Name"))
+                            expect(app.paymentAddress).to(equal("0x011c6dd9565b8b83e6a9ee3f06e89ece3251ef2f"))
+                            expect(app.isPublic).to(equal(false))
+                            expect(app.reputationScore).to(equal(2.7))
+                            expect(app.address).to(equal("0x8f9bdb7f562ccdedf3c24cf25e9cece9df62138b"))
+                            expect(app.username).to(equal("testUsername"))
+                        
                             done()
                         }
                     }
@@ -45,8 +65,27 @@ class AppsAPIClientTests: QuickSpec {
                     subject = AppsAPIClient(teapot: mockTeapot, cacheEnabled: false)
 
                     waitUntil { done in
-                        subject.getFeaturedApps { users, _ in
-                            expect(users?.first?.about).to(equal("It's all about tests"))
+                        subject.getFeaturedApps { users, error in
+                            expect(users).toNot(beNil())
+                            expect(error).to(beNil())
+                            
+                            guard let app = users?.first else {
+                                fail("No user found!")
+                                done()
+                                return
+                            }
+                            expect(app.about).to(equal("It's all about tests"))
+                            expect(app.avatarPath).to(equal("https://token-id-service-development.herokuapp.com/avatar/0x8f9bdb7f562ccdedf3c24cf25e9cece9df62138b.png"))
+                            expect(app.averageRating).to(equal(4.5))
+                            expect(app.isApp).to(equal(true))
+                            expect(app.location).to(equal("Hamsterdam"))
+                            expect(app.name).to(equal("Moar Tests"))
+                            expect(app.paymentAddress).to(equal("0x011c6dd9565b8b83e6a9ee3f06e89ece3251ef2f"))
+                            expect(app.isPublic).to(equal(true))
+                            expect(app.reputationScore).to(equal(5.0))
+                            expect(app.address).to(equal("0x8f9bdb7f562ccdedf3c24cf25e9cece9df62138b"))
+                            expect(app.username).to(equal("testUsername2"))
+                            
                             done()
                         }
                     }
@@ -60,6 +99,9 @@ class AppsAPIClientTests: QuickSpec {
 
                     waitUntil { done in
                         subject.getTopRatedApps { users, error in
+                            expect(users).toNot(beNil())
+                            expect(error).toNot(beNil())
+                            
                             expect(users?.count).to(equal(0))
                             expect(error?.type).to(equal(.invalidResponseStatus))
                             done()
@@ -73,6 +115,9 @@ class AppsAPIClientTests: QuickSpec {
 
                     waitUntil { done in
                         subject.getFeaturedApps { users, error in
+                            expect(error).toNot(beNil())
+                            expect(users).toNot(beNil())
+                            
                             expect(users?.count).to(equal(0))
                             expect(error?.type).to(equal(.invalidResponseStatus))
                             done()
@@ -89,6 +134,9 @@ class AppsAPIClientTests: QuickSpec {
 
                     waitUntil { done in
                         subject.getTopRatedApps { users, error in
+                            expect(users).toNot(beNil())
+                            expect(error).toNot(beNil())
+                            
                             expect(users?.count).to(equal(0))
                             expect(error?.type).to(equal(.invalidResponseStatus))
                             done()
@@ -102,6 +150,9 @@ class AppsAPIClientTests: QuickSpec {
 
                     waitUntil { done in
                         subject.getFeaturedApps { users, error in
+                            expect(error).toNot(beNil())
+                            expect(users).toNot(beNil())
+                            
                             expect(users?.count).to(equal(0))
                             expect(error?.type).to(equal(.invalidResponseStatus))
                             done()
@@ -118,7 +169,9 @@ class AppsAPIClientTests: QuickSpec {
 
                     waitUntil { done in
                         subject.getTopRatedApps { users, error in
-                            expect(users?.count).to(beNil())
+                            expect(users).to(beNil())
+                            expect(error).toNot(beNil())
+                            
                             expect(error?.type).to(equal(.invalidResponseJSON))
 
                             done()
@@ -132,7 +185,10 @@ class AppsAPIClientTests: QuickSpec {
 
                     waitUntil { done in
                         subject.getFeaturedApps { users, error in
-                            expect(users?.count).to(beNil())
+                            //TODO: Do we actually want this inconsistent behavior where only on parsing errors is `users` array nil instead of empty?
+                            expect(users).to(beNil())
+                            expect(error).toNot(beNil())
+
                             expect(error?.type).to(equal(.invalidResponseJSON))
                             done()
                         }

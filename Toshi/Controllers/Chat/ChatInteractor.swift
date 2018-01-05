@@ -167,22 +167,17 @@ final class ChatInteractor: NSObject {
 
         let signedTransaction = "0x\(Cereal.shared.signWithWallet(hex: transaction))"
 
-        self.etherAPIClient.sendSignedTransaction(originalTransaction: transaction, transactionSignature: signedTransaction) { [weak self] success, json, error in
+        self.etherAPIClient.sendSignedTransaction(originalTransaction: transaction, transactionSignature: signedTransaction) { [weak self] success, transactionHash, error in
 
             self?.output?.didFinishRequest()
 
-            guard success, let json = json?.dictionary else {
-                self?.logSendErrorIfRecipientUnregistered(error: error)
+            guard success, let txHash = transactionHash else {
                 self?.output?.didCatchError(error?.description ?? ToshiError.genericError.description)
                 completion?(false)
 
                 return
             }
-
-            guard let txHash = json["tx_hash"] as? String else {
-                CrashlyticsLogger.log("Error recovering transaction hash.")
-                fatalError("Error recovering transaction hash.")
-            }
+            
             guard let value = parameters["value"] as? String else { return }
 
             let payment = SofaPayment(txHash: txHash, valueHex: value)
