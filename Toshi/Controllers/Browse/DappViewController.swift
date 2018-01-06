@@ -103,8 +103,15 @@ final class DappViewController: UIViewController {
         view.addSubview(primaryStackView)
         
         let topAnchor: NSLayoutYAxisAnchor
+
+        if #available(iOS 11.0, *) {
+            topAnchor = view.safeAreaLayoutGuide.topAnchor
+        } else {
+            topAnchor = topLayoutGuide.bottomAnchor
+        }
         
-        primaryStackView.top(to: layoutGuide(), offset: 16)
+        primaryStackView.top(to: view, topAnchor, offset: 16)
+
         primaryStackView.leftToSuperview(offset: 16)
         primaryStackView.rightToSuperview(offset: 16)
     
