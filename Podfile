@@ -28,10 +28,9 @@ abstract_target 'CocoaPods' do
 
   target 'Debug' do
 
-  end
-
-  target 'Tests' do
-	
+    target 'Tests' do
+        inherit! :search_paths
+    end
   end
   
   # Disable Code Coverage for Pods projects
