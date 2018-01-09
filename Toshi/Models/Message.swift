@@ -96,7 +96,6 @@ class Message: NSObject {
         }
     }
 
-    var senderId: String = ""
     var date: Date
 
     var isOutgoing: Bool = true

@@ -58,7 +58,6 @@ class MessageParsingTests: XCTestCase {
         
         XCTAssertEqual(parsed.messageType, "Text")
         XCTAssertEqual(parsed.signalMessage, message)
-        XCTAssertEqual(parsed.senderId, "")
         XCTAssertEqual(parsed.deliveryStatus, .attemptingOut)
     }
     
@@ -90,7 +89,6 @@ class MessageParsingTests: XCTestCase {
         XCTAssertEqual(parsed.signalMessage, message)
         XCTAssertEqual(parsed.text, "o hai")
         XCTAssertEqual(parsed.sofaWrapper?.type, .message)
-        XCTAssertEqual(parsed.senderId, "")
         XCTAssertEqual(parsed.deliveryStatus, .attemptingOut)
     }
     
@@ -123,7 +121,6 @@ class MessageParsingTests: XCTestCase {
         XCTAssertEqual(parsed.signalMessage, message)
         XCTAssertEqual(parsed.text, "o hai")
         XCTAssertEqual(parsed.sofaWrapper?.type, .message)
-        XCTAssertEqual(parsed.senderId, "")
         XCTAssertEqual(parsed.deliveryStatus, .attemptingOut)
     }
     
