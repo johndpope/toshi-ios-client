@@ -22,7 +22,13 @@ class MessageParsingTests: XCTestCase {
         return "\(SofaType.message.rawValue){\"body\":\"o hai\"}"
     }()
     
+    private lazy var paymentMessageBody: String = {
+        return "\(SofaType.payment.rawValue){\"value\":\"0x17ac784453a3d2\"}"
+    }()
+    
     // MARK: - Single User Threads
+    
+    // MARK: Outgoing
     
     func testHandlingInvalidKeyMessage() {
         let interactor = ChatInteractor(output: nil, thread: normalThread)
@@ -118,6 +124,42 @@ class MessageParsingTests: XCTestCase {
         XCTAssertEqual(parsed.text, "o hai")
         XCTAssertEqual(parsed.sofaWrapper?.type, .message)
         XCTAssertEqual(parsed.senderId, "")
+        XCTAssertEqual(parsed.deliveryStatus, .attemptingOut)
+    }
+    
+    func testParsingOutgoingPayment() {
+        let interactor = ChatInteractor(output: nil, thread: normalThread)
+        
+        let message = TSOutgoingMessage(timestamp: nonZeroTimeStamp,
+                                        in: normalThread,
+                                        messageBody: paymentMessageBody)
+        
+        let parsed = interactor.handleSignalMessage(message)
+        
+        // These are not calculated on an outgoing message
+        XCTAssertNil(parsed.fiatValueString)
+        XCTAssertNil(parsed.ethereumValueString)
+        
+        XCTAssertNil(parsed.attachment)
+        XCTAssertNil(parsed.image)
+        XCTAssertNil(parsed.text)
+        XCTAssertNil(parsed.attributedText)
+        
+        XCTAssertTrue(parsed.isOutgoing)
+        XCTAssertTrue(parsed.isDisplayable)
+        
+        // An *outgoing* payment is not actionable
+        XCTAssertFalse(parsed.isActionable)
+        
+        // Can't check fiat value or full subtitle since fiat value will change.
+        XCTAssertTrue(parsed.subtitle?.contains("0.0067 ETH") ?? false)
+        XCTAssertNotNil(parsed.attributedSubtitle)
+                
+        XCTAssertEqual(parsed.messageType, "Actionable")
+        XCTAssertEqual(parsed.signalMessage, message)
+        XCTAssertEqual(parsed.title, "Payment sent")
+        XCTAssertEqual(parsed.attributedTitle?.string, "Payment sent")
+        XCTAssertEqual(parsed.sofaWrapper?.type, .payment)
         XCTAssertEqual(parsed.deliveryStatus, .attemptingOut)
     }
 }
