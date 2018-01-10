@@ -69,7 +69,7 @@ NSString *const GroupMemberJoinedMessage = @"GROUP_MEMBER_JOINED";
     NSString *updateTypeString = @"";
     NSString *updatedGroupInfoString = @"";
 
-    BOOL isNewGroup = self.uniqueId == nil;
+    BOOL isNewGroup = self.uniqueId == nil && self.groupName == nil;
     if (isNewGroup) {
         return @{
                  GroupUpdateTypeSting: NSLocalizedString(GroupBecameMemberMessage, updateTypeString),
