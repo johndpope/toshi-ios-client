@@ -27,6 +27,10 @@ class MessageParsingTests: XCTestCase {
         return "\(SofaType.payment.rawValue){\"value\":\"0x17ac784453a3d2\"}"
     }()
     
+    private lazy var paymentRequestMessageBody: String = {
+        return "\(SofaType.paymentRequest.rawValue){\"value\":\"0x17ac784453a3d2\"}"
+    }()
+    
     // MARK: - Single User Threads
     
     // MARK: Outgoing
@@ -179,6 +183,48 @@ class MessageParsingTests: XCTestCase {
         XCTAssertEqual(parsed.deliveryStatus, .attemptingOut)
     }
     
+    func testParsingOutgoingPaymentRequest() {
+        let interactor = ChatInteractor(output: nil, thread: normalThread)
+        
+        let message = TSOutgoingMessage(timestamp: nonZeroTimeStamp,
+                                        in: normalThread,
+                                        messageBody: paymentRequestMessageBody)
+        
+        // Payment requests should always process commands
+        let parsed = interactor.handleSignalMessage(message, shouldProcessCommands: true)
+        
+        // These are not calculated until display due to exchange rates
+        XCTAssertNil(parsed.fiatValueString)
+        XCTAssertNil(parsed.ethereumValueString)
+        
+        XCTAssertNil(parsed.attachment)
+        XCTAssertNil(parsed.image)
+        XCTAssertNil(parsed.attributedText)
+        XCTAssertNil(parsed.title)
+        XCTAssertNil(parsed.attributedTitle)
+        
+        XCTAssertTrue(parsed.isOutgoing)
+        
+        XCTAssertFalse(parsed.isDisplayable)
+        XCTAssertFalse(parsed.isActionable)
+
+        XCTAssertEqual(parsed.messageType, "Text")
+        XCTAssertEqual(parsed.text, "")
+        XCTAssertEqual(parsed.signalMessage, message)
+        XCTAssertEqual(parsed.sofaWrapper?.type, .paymentRequest)
+        XCTAssertEqual(parsed.deliveryStatus, .attemptingOut)
+        
+        guard let paymentRequest = parsed.sofaWrapper as? SofaPaymentRequest else {
+            XCTFail("This should be a payment request")
+            
+            return
+        }
+        
+        let ethereumValueString = EthereumConverter.ethereumValueString(forWei: paymentRequest.value)
+        XCTAssertEqual(ethereumValueString, "0.0067 ETH",
+                       "Ethereum value string for static hex code has changed")
+    }
+    
     // MARK: Incoming
     
     func testParsingIncomingPayment() {
@@ -237,5 +283,62 @@ class MessageParsingTests: XCTestCase {
         XCTAssertEqual(parsed.attributedTitle?.string, "Payment received")
         XCTAssertEqual(parsed.sofaWrapper?.type, .payment)
         XCTAssertEqual(parsed.deliveryStatus, .attemptingOut)
+    }
+    
+    func testIncomingPaymentRequest() {
+        let interactor = ChatInteractor(output: nil, thread: normalThread)
+        
+        let message = TSIncomingMessage(timestamp: nonZeroTimeStamp,
+                                        in: normalThread,
+                                        authorId: otherUserID,
+                                        sourceDeviceId: nonZeroDeviceID,
+                                        messageBody: paymentRequestMessageBody)
+        
+        // Payment requests should always process commands
+        let parsed = interactor.handleSignalMessage(message, shouldProcessCommands: true)
+        
+        XCTAssertNil(parsed.fiatValueString)
+        XCTAssertNil(parsed.ethereumValueString)
+        
+        XCTAssertNil(parsed.attachment)
+        XCTAssertNil(parsed.image)
+        XCTAssertNil(parsed.attributedText)
+        
+        XCTAssertFalse(parsed.isOutgoing)
+        XCTAssertFalse(parsed.isDisplayable)
+
+        XCTAssertTrue(parsed.isActionable)
+        
+        XCTAssertEqual(parsed.messageType, "Actionable")
+        XCTAssertEqual(parsed.text, "")
+        XCTAssertEqual(parsed.signalMessage, message)
+        XCTAssertEqual(parsed.title, "Payment request")
+        XCTAssertEqual(parsed.attributedTitle?.string, "Payment request")
+        XCTAssertEqual(parsed.sofaWrapper?.type, .paymentRequest)
+        XCTAssertEqual(parsed.deliveryStatus, .attemptingOut)
+        
+        guard let paymentRequest = parsed.sofaWrapper as? SofaPaymentRequest else {
+            XCTFail("This should be a payment request")
+            
+            return
+        }
+        
+        let ethereumValueString = EthereumConverter.ethereumValueString(forWei: paymentRequest.value)
+        
+        // We don't know what this will be because conversion rates fluctuate, but it should be *something*
+        XCTAssertFalse(paymentRequest.fiatValueString.isEmpty,
+                       "Payment Fiat value string has no content")
+        
+        XCTAssertEqual(ethereumValueString, "0.0067 ETH",
+                       "Ethereum value string for static hex code has changed")
+        XCTAssertTrue(parsed.subtitle?.contains(ethereumValueString) ?? false,
+                      "Subtitle \"\(parsed.subtitle ?? "(null)")\" does not contain \"\(ethereumValueString)\"")
+        XCTAssertTrue(parsed.subtitle?.contains(paymentRequest.fiatValueString) ?? false,
+                      "Subtitle \"\(parsed.subtitle ?? "(null)")\" does not contain \"\(paymentRequest.fiatValueString)\"")
+        XCTAssertTrue(parsed.attributedSubtitle?.string.contains(ethereumValueString) ?? false,
+                      "Attributed subtitle's underlying string does not contain \"\(ethereumValueString)\"")
+        XCTAssertTrue(parsed.attributedSubtitle?.string.contains(paymentRequest.fiatValueString) ?? false,
+                      "Attributed subtitle's underlying string does not contain \"\(paymentRequest.fiatValueString)\"")
+        
     }
 }
