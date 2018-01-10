@@ -16,6 +16,7 @@
 import UIKit
 import SweetUIKit
 import WebKit
+import TinyConstraints
 
 final class SOFAWebController: UIViewController {
 
@@ -119,15 +120,18 @@ final class SOFAWebController: UIViewController {
         view.addSubview(webView)
         view.addSubview(toolbar)
 
-        NSLayoutConstraint.activate([
-            self.toolbar.leftAnchor.constraint(equalTo: self.view.leftAnchor),
-            self.toolbar.rightAnchor.constraint(equalTo: self.view.rightAnchor),
-            self.toolbar.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
-        ])
 
-        toolbar.set(height: 44)
+        toolbar.height(44)
+        toolbar.bottom(to: layoutGuide())
+        toolbar.left(to: view)
+        toolbar.right(to: view)
+
+        webView.top(to: view)
+        webView.left(to: view)
+        webView.right(to: view)
+        webView.bottomToTop(of: toolbar)
+
         hidesBottomBarWhenPushed = true
-        webView.fillSuperview()
     }
 
     func load(url: URL) {
