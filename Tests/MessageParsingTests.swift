@@ -146,6 +146,7 @@ class MessageParsingTests: XCTestCase {
         XCTAssertTrue(parsed.isOutgoing)
         XCTAssertTrue(parsed.isDisplayable)
         
+        // Not actionable despite message type since outgoing.
         XCTAssertFalse(parsed.isActionable)
         
         guard let payment = parsed.sofaWrapper as? SofaPayment else {
@@ -200,6 +201,8 @@ class MessageParsingTests: XCTestCase {
         XCTAssertNil(parsed.attributedText)
         
         XCTAssertFalse(parsed.isOutgoing)
+        
+        // Not actionable despite message type since payment is complete.
         XCTAssertFalse(parsed.isActionable)
 
         XCTAssertTrue(parsed.isDisplayable)
@@ -209,6 +212,8 @@ class MessageParsingTests: XCTestCase {
             
             return
         }
+        
+        XCTAssertEqual(payment.status, .unconfirmed)
         
         // We don't know what this will be because conversion rates fluctuate, but it should be *something*
         XCTAssertFalse(payment.fiatValueString.isEmpty,
