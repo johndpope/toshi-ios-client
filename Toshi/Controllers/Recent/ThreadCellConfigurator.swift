@@ -55,9 +55,15 @@ final class ThreadCellConfigurator: CellConfigurator {
         if let message = thread.messages.last, let messageBody = message.body {
             switch SofaType(sofa: messageBody) {
             case .message:
-                subtitle = SofaMessage(content: messageBody).body
+                if message.hasAttachments() {
+                    subtitle = Localized("attachment_message_preview_string")
+                } else {
+                    subtitle = SofaMessage(content: messageBody).body
+                }
             case .paymentRequest:
-                subtitle = SofaPaymentRequest(content: messageBody).body
+                subtitle = Localized("payment_request_message_preview_string")
+            case .payment:
+                subtitle = Localized("payment_message_preview_string")
             default:
                 break
             }
