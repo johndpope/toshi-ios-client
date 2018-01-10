@@ -152,6 +152,8 @@ final class ChatViewController: UIViewController, UINavigationControllerDelegate
     }
 
     func updateThread(_ thread: TSThread) {
+        guard thread.uniqueId == self.thread.uniqueId else { return }
+
         self.thread = thread
 
         title = thread.name()

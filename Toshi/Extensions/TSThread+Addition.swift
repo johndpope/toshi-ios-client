@@ -38,4 +38,30 @@ extension TSThread {
             return image()
         }
     }
+    
+    func updateGroupMembers() {
+        if let groupThread = self as? TSGroupThread {
+
+            guard  let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+            let contactsIDs = appDelegate.contactsManager.tokenContacts.map { $0.address }
+
+            let recipientsIdsSet = Set(groupThread.recipientIdentifiers)
+            let nonContactsUsersIds = recipientsIdsSet.subtracting(Set(contactsIDs))
+
+            IDAPIClient.shared.updateContacts(with: Array(nonContactsUsersIds))
+            
+            TSStorageManager.shared().dbReadWriteConnection?.readWrite { transaction in
+                for recipientId in groupThread.recipientIdentifiers {
+                    
+                    var recipient = SignalRecipient(textSecureIdentifier: recipientId, with: transaction)
+                    
+                    if recipient == nil {
+                        recipient = SignalRecipient(textSecureIdentifier: recipientId, relay: nil)
+                    }
+                    
+                    recipient?.save(with: transaction)
+                }
+            }
+        }
+    }
 }

@@ -45,4 +45,13 @@ extension String {
             fatalError("invalid regex: \(error.localizedDescription)")
         }
     }
+
+    func truncate(length: Int, trailing: String? = "...") -> String {
+        if self.length > length {
+            let end = index(startIndex, offsetBy: length)
+            return String(self[..<end]) + (trailing ?? "")
+        } else {
+            return self
+        }
+    }
 }

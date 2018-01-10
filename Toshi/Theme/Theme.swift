@@ -164,7 +164,7 @@ extension Theme {
     
     private static func dynamicType(for preferredFont: UIFont, withStyle style: UIFontTextStyle, inSizeRange range: ClosedRange<CGFloat>) -> UIFont {
         let font: UIFont
-        
+
         if #available(iOS 11.0, *) {
             let metrics = UIFontMetrics(forTextStyle: style)
             font = metrics.scaledFont(for: preferredFont, maximumPointSize: range.upperBound)

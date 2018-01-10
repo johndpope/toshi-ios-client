@@ -57,15 +57,40 @@ protocol GroupViewModelProtocol: class {
 
     var rightBarButtonSelector: Selector { get }
 
-    var participantsIDs: [String] { get }
+    var recipientsIds: [String] { get }
+    var allParticipantsIDs: [String] { get }
+    var sortedMembers: [TokenUser] { get set }
 
     func updateAvatar(to image: UIImage)
     func updatePublicState(to isPublic: Bool)
     func updateNotificationsState(to notificationsOn: Bool)
     func updateTitle(to title: String)
-    func updateParticipantsIds(to participantsIds: [String])
+    func updateRecipientsIds(to recipientsIds: [String])
+
+    func setupSortedMembers()
 
     var isDoneButtonEnabled: Bool { get }
 
     var completeActionDelegate: GroupViewModelCompleteActionDelegate? { get set }
+}
+
+extension GroupViewModelProtocol {
+
+    func setupSortedMembers() {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            CrashlyticsLogger.log("Failed to access app delegate")
+            fatalError("Can't access app delegate")
+        }
+
+        guard let currentUser = TokenUser.current else {
+            CrashlyticsLogger.log("Failed to access current user")
+            fatalError("Can't access current user")
+        }
+
+        var members = appDelegate.contactsManager.tokenContacts
+        members.append(currentUser)
+        members = members.filter { recipientsIds.contains($0.address) }
+
+        sortedMembers = members.sorted { $0.username < $1.username }
+    }
 }

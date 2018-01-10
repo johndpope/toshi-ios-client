@@ -151,7 +151,13 @@ final class AvatarManager: NSObject {
         }
     }
 
-    // Downloads or finds avatar for the KEY which may be token_id/address or resource url path
+    /// Downloads or finds avatar for given key.
+    ///
+    /// - Parameters:
+    ///   - key: token_id/address or resource url path.
+    ///   - completion: The completion closure to fire when the request completes or image is found in cache.
+    ///                 - image: Found in cache or fetched image.
+    ///                 - path: Path for found in cache or fetched image.
     func avatar(for key: String, completion: @escaping ((UIImage?, String?) -> Void)) {
         if key.hasAddressPrefix {
             if let avatarPath = UserDefaults.standard.object(forKey: key) as? String {
@@ -164,7 +170,13 @@ final class AvatarManager: NSObject {
         _avatar(for: key, completion: completion)
     }
 
-    //Downloads or finds avatar for the resource url path
+    /// Downloads or finds avatar for the resource url path.
+    ///
+    /// - Parameters:
+    ///   - path: An resource url path.
+    ///   - completion: The completion closure to fire when the request completes or image is found in cache.
+    ///                 - image: Found in cache or fetched image.
+    ///                 - path: Path for found in cache or fetched image.
     private func _avatar(for path: String, completion: @escaping ((UIImage?, String?) -> Void)) {
         guard let avatar = imageCache.object(forKey: path) else {
             downloadAvatar(path: path, completion: completion)
@@ -174,6 +186,12 @@ final class AvatarManager: NSObject {
         completion(avatar, path)
     }
 
+    /// Finds avatar for the given key.
+    ///
+    /// - Parameters:
+    ///   - key: token_id/address or resource url path.
+    /// - Returns:
+    ///   - found image or nil if not present
     @objc func cachedAvatar(for key: String) -> UIImage? {
         if key.hasAddressPrefix {
             guard let avatarPath = UserDefaults.standard.object(forKey: key) as? String else { return nil }

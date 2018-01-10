@@ -171,7 +171,9 @@ extension RecentViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        if section == 0 && dataSource.hasUnacceptedThreads {
+        let isUnacceptedThreadsSection = (section == 0 && dataSource.hasUnacceptedThreads)
+
+        if isUnacceptedThreadsSection || dataSource.acceptedThreadsCount == 0 {
             return nil
         }
 
@@ -229,7 +231,9 @@ extension RecentViewController: ProfilesListCompletionOutput {
 
         guard let selectedProfileAddress = selectedProfilesIds.first else { return }
 
-        ChatInteractor.getOrCreateThread(for: selectedProfileAddress)
+        let thread = ChatInteractor.getOrCreateThread(for: selectedProfileAddress)
+        thread.isPendingAccept = false
+        thread.save()
 
         DispatchQueue.main.async {
             Navigator.tabbarController?.displayMessage(forAddress: selectedProfileAddress)

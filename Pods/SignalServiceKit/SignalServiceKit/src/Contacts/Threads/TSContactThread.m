@@ -65,6 +65,7 @@ NS_ASSUME_NONNULL_BEGIN
 
     if (!thread) {
         thread = [[TSContactThread alloc] initWithContactId:contactId];
+        thread.isPendingAccept = YES;
         [thread saveWithTransaction:transaction];
     }
 

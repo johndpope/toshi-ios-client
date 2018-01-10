@@ -78,6 +78,23 @@ NSUInteger TSInfoMessageSchemaVersion = 1;
     return self;
 }
 
+- (instancetype)initWithTimestamp:(uint64_t)timestamp
+                         authorId:(NSString *)authorId
+                         inThread:(TSThread *)thread
+                      messageType:(TSInfoMessageType)infoMessage
+                    customMessage:(NSString *)customMessage
+             additionalInfoString:(NSString *)additionalInfoString
+{
+    self = [self initWithTimestamp:timestamp inThread:thread messageType:infoMessage];
+    if (self) {
+        _customMessage = customMessage;
+        _additionalInfoString = additionalInfoString;
+        _authorId = authorId;
+    }
+
+    return self;
+}
+
 + (instancetype)userNotRegisteredMessageInThread:(TSThread *)thread
 {
     return [[self alloc] initWithTimestamp:[NSDate ows_millisecondTimeStamp]

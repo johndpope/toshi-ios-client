@@ -5,6 +5,17 @@
 #import "TSYapDatabaseObject.h"
 #import "ContactsManagerProtocol.h"
 
+extern NSString *const GroupUpdateTypeSting;
+extern NSString *const GroupInfoString;
+
+extern NSString *const GroupCreateMessage;
+extern NSString *const GroupBecameMemberMessage;
+extern NSString *const GroupUpdatedMessage;
+extern NSString *const GroupTitleChangedMessage;
+extern NSString *const GroupAvatarChangedMessage;
+extern NSString *const GroupMemberLeftMessage;
+extern NSString *const GroupMemberJoinedMessage;
+
 @interface TSGroupModel : TSYapDatabaseObject
 
 @property (nonatomic, strong) NSArray<NSString *> *groupMemberIds;
@@ -21,7 +32,7 @@
 
 - (BOOL)isEqual:(id)other;
 - (BOOL)isEqualToGroupModel:(TSGroupModel *)model;
-- (NSString *)getInfoStringAboutUpdateTo:(TSGroupModel *)model contactsManager:(id<ContactsManagerProtocol>)contactsManager;
+- (NSDictionary *)getInfoAboutUpdateTo:(TSGroupModel *)newModel;
 #endif
 
 @end

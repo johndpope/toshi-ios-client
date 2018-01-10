@@ -312,7 +312,9 @@ extension ProfileViewController: PaymentControllerDelegate {
 extension ProfileViewController: ProfileViewDelegate {
     func didTapMessageProfileButton(in view: ProfileView) {
         // create thread if needed
-        ChatInteractor.getOrCreateThread(for: profile.address)
+        let thread = ChatInteractor.getOrCreateThread(for: profile.address)
+        thread.isPendingAccept = false
+        thread.save()
 
         DispatchQueue.main.async {
             (self.tabBarController as? TabBarController)?.displayMessage(forAddress: self.profile.address)

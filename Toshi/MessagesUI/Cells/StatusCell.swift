@@ -21,6 +21,7 @@ final class StatusCell: UITableViewCell {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
         setTextLabelStyle()
+        setupAppearence()
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -40,5 +41,10 @@ final class StatusCell: UITableViewCell {
         textLabel?.font = Theme.preferredFootnote()
 
         textLabel?.adjustsFontForContentSizeCategory = true
+    }
+
+    private func setupAppearence() {
+        textLabel?.numberOfLines = 0
+        selectionStyle = .none
     }
 }

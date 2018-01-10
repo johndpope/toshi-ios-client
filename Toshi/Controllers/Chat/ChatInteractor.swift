@@ -207,13 +207,18 @@ final class ChatInteractor: NSObject {
     /// - Parameters:
     ///   - interaction: the interaction to handle. Incoming/outgoing messages, wrapping SOFA structures.
     ///   - shouldProcessCommands: If true, will process a sofa wrapper. This means replying to requests, displaying payment UI etc.
-    func handleSignalMessage(_ signalMessage: TSMessage, shouldProcessCommands: Bool = false) -> Message {
+    ///   - shouldUpdateGroupMembers: If true will go over group members IDs and update with calling id service and download avatar
+    func handleSignalMessage(_ signalMessage: TSMessage, shouldProcessCommands: Bool = false, shouldUpdateGroupMembers: Bool = false) -> Message {
         if let invalidKeyErrorMessage = signalMessage as? TSInvalidIdentityKeySendingErrorMessage {
             DispatchQueue.main.async {
                 self.handleInvalidKeyError(invalidKeyErrorMessage)
             }
 
             return Message(sofaWrapper: nil, signalMessage: invalidKeyErrorMessage, date: invalidKeyErrorMessage.dateForSorting(), isOutgoing: false)
+        }
+
+        if let infoMessage = signalMessage as? TSInfoMessage {
+            return handleSignalInfoMessage(infoMessage, shouldUpdateGroupMembers: shouldUpdateGroupMembers)
         }
 
         if shouldProcessCommands {
@@ -356,6 +361,88 @@ final class ChatInteractor: NSObject {
         sendInitialGroupMessage(to: thread!, completion: completion)
     }
 
+    private func handleSignalInfoMessage(_ infoMessage: TSInfoMessage, shouldUpdateGroupMembers: Bool = false) -> Message {
+        let customMessage = infoMessage.customMessage
+        let updateInfoString = infoMessage.additionalInfoString
+        let authorId = infoMessage.authorId
+
+        if let thread = infoMessage.thread as? TSGroupThread, let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+
+            var object = ""
+            var subject = ""
+            var statusType = SofaStatus.StatusType.none
+
+            if let author = appDelegate.contactsManager.tokenContact(forAddress: authorId) {
+                subject = author.nameOrDisplayName
+                switch customMessage {
+                case GroupBecameMemberMessage:
+                    statusType = .becameMember
+                    subject = updateInfoString
+                case GroupTitleChangedMessage:
+                    statusType = .rename
+                    object = updateInfoString
+                case GroupAvatarChangedMessage:
+                    statusType = .changePhoto
+                case GroupMemberLeftMessage:
+                    statusType = .leave
+                case GroupMemberJoinedMessage:
+                    statusType = .added
+
+                    if shouldUpdateGroupMembers {
+                        thread.updateGroupMembers()
+                    }
+
+                    object = userWhoJoinedNamesString(for: updateInfoString)
+
+                    if shouldUpdateGroupMembers {
+                        ChatInteractor.requestContactsRefresh()
+                    }
+
+                default:
+                    break
+                }
+            } else if infoMessage.customMessage == GroupCreateMessage {
+                statusType = .created
+                subject = updateInfoString
+            } else {
+                idAPIClient.updateContact(with: authorId)
+            }
+
+            let status = SofaStatus(content: "SOFA::Status:{\"type\":\"\(statusType.rawValue)\",\"subject\":\"\(subject)\",\"object\":\"\(object)\"}")
+            let message = Message(sofaWrapper: status, signalMessage: infoMessage, date: infoMessage.dateForSorting(), isOutgoing: false)
+
+            return message
+        }
+
+        return Message(sofaWrapper: nil, signalMessage: infoMessage, date: infoMessage.dateForSorting(), isOutgoing: false)
+    }
+
+    private func userWhoJoinedNamesString(for infoMessageString: String) -> String {
+        let namesOrAddresses = infoMessageString.components(separatedBy: ",")
+        var resultNames: [String] = []
+
+        for nameOrAddress in namesOrAddresses.map({ $0.trimmingCharacters(in: .whitespacesAndNewlines) }) {
+            resultNames.append(nameOrTruncatedAddress(for: nameOrAddress))
+        }
+
+        return resultNames.joined(separator: ", ")
+    }
+
+    private func nameOrTruncatedAddress(for nameOrAddress: String) -> String {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return nameOrAddress }
+
+        if nameOrAddress.hasAddressPrefix {
+            let validDisplayName = appDelegate.contactsManager.displayName(forPhoneIdentifier: nameOrAddress)
+            if !validDisplayName.isEmpty {
+                return validDisplayName
+            } else {
+                return nameOrAddress.truncate(length: 10)
+            }
+        }
+
+        return nameOrAddress
+    }
+
     private static func sendGroupUpdateMessage(to thread: TSGroupThread, with groupModel: TSGroupModel, completion: @escaping ((Bool) -> Void)) {
         DispatchQueue.global(qos: .background).async {
             let timestamp = NSDate.ows_millisecondTimeStamp()
@@ -371,7 +458,7 @@ final class ChatInteractor: NSObject {
         DispatchQueue.global(qos: .background).async {
             let timestamp = NSDate.ows_millisecondTimeStamp()
             let outgoingMessage = TSOutgoingMessage(timestamp: timestamp, in: thread, groupMetaMessage: TSGroupMetaMessage.new)
-            outgoingMessage.body = "GROUP_CREATED"
+            outgoingMessage.update(withCustomMessage: GroupCreateMessage)
 
             let interactor = ChatInteractor(output: nil, thread: thread)
 

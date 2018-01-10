@@ -278,6 +278,8 @@
 "eth_sign_warning" = "Warning: Only sign messages from sites you fully trust as signing messages can have dangerous side effects.";
 
 /* Status messages */
+"status_type_create" = "Group created.";
+"status_type_became_member" = "You were added to %@.";
 "status_type_leave" = "%@ left the group.";
 "status_type_added" = "%@ added %@ to the group.";
 "status_type_change_photo" = "%@ changed the group cover photo.";

@@ -72,10 +72,6 @@ final class GroupViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override var canBecomeFirstResponder: Bool {
-        return true
-    }
-
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -105,6 +101,10 @@ final class GroupViewController: UIViewController {
         super.viewDidAppear(animated)
 
         scrollViewBottomInset = tableView.contentInset.bottom
+
+        if let _ = viewModel as? NewGroupViewModel {
+           letGroupTitleCellBecomeFirstResponder()
+        }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -126,6 +126,12 @@ final class GroupViewController: UIViewController {
         tableView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
         tableView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
         tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+    }
+
+    private func letGroupTitleCellBecomeFirstResponder() {
+        if let titleCell = tableView.visibleCells.first as? AvatarTitleCell {
+            titleCell.titleTextField.becomeFirstResponder()
+        }
     }
 
     @objc func updateAvatar() {
@@ -295,11 +301,11 @@ extension GroupViewController: UITableViewDelegate {
 
         switch itemType {
         case .participant:
-            let selectedUserId = viewModel.participantsIDs[indexPath.row - 1]
+            let selectedUserId = viewModel.allParticipantsIDs[indexPath.row - 1]
             showUserInfo(with: selectedUserId)
         case .addParticipant:
             let datasource = ProfilesDataSource(type: .updateGroupChat)
-            datasource.excludedProfilesIds = viewModel.participantsIDs
+            datasource.excludedProfilesIds = viewModel.recipientsIds
             let profilesViewController = ProfilesViewController(datasource: datasource, output: self)
 
             navigationController?.pushViewController(profilesViewController, animated: true)
@@ -326,7 +332,7 @@ extension GroupViewController: UINavigationControllerDelegate {
 extension GroupViewController: ProfilesListCompletionOutput {
 
     func didFinish(_ controller: ProfilesViewController, selectedProfilesIds: [String]) {
-        viewModel.updateParticipantsIds(to: selectedProfilesIds)
+        viewModel.updateRecipientsIds(to: selectedProfilesIds)
     }
 }
 
@@ -393,7 +399,6 @@ extension GroupViewController: BasicCellActionDelegate {
     func didFinishTitleInput(_ cell: BasicTableViewCell, text: String?) {
         let title = text?.trimmingCharacters(in: .whitespaces) ?? ""
         viewModel.updateTitle(to: title)
-        tableView.reloadRows(at: [IndexPath(row: 0, section: 0)], with: .automatic)
     }
 
     func titleShouldChangeCharactersInRange(_ cell: BasicTableViewCell, text: String?, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {

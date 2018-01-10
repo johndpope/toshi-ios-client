@@ -49,30 +49,29 @@ final class NewGroupViewModel {
         avatarTitleData.tag = GroupItemType.avatarTitle.rawValue
 
         let avatarTitleSectionData = TableSectionData(cellsData: [avatarTitleData])
-        let notificationsData = TableCellData(title: Localized("new_group_notifications_settings_title"), switchState: groupInfo.notificationsOn)
-        notificationsData.tag = GroupItemType.notifications.rawValue
-        let settingsSectionData = TableSectionData(cellsData: [notificationsData], headerTitle: Localized("new_group_settings_header_title"))
 
         var participantsCellData: [TableCellData] = []
-        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
 
-        let members = appDelegate.contactsManager.tokenContacts.filter { groupInfo.participantsIDs .contains($0.address) }
-        for member in members {
-            participantsCellData.append(TableCellData(title: member.name, subtitle: member.displayUsername, leftImage: AvatarManager.shared.cachedAvatar(for: member.avatarPath)))
+        setupSortedMembers()
+        for member in sortedMembers {
+            participantsCellData.append(TableCellData(title: member.nameOrDisplayName, subtitle: member.displayUsername, leftImage: AvatarManager.shared.cachedAvatar(for: member.avatarPath)))
         }
 
         let participantsHeaderTitle = LocalizedPlural("group_participants_header_title", for: groupInfo.participantsIDs.count)
         let participantsSectionData = TableSectionData(cellsData: participantsCellData, headerTitle: participantsHeaderTitle)
 
-        models = [avatarTitleSectionData, settingsSectionData, participantsSectionData]
+        models = [avatarTitleSectionData, participantsSectionData]
     }
 
+    private var _sortedMembers: [TokenUser] = []
+
     @objc private func createGroup() {
-        groupInfo.participantsIDs.append(Cereal.shared.address)
+        var groupParticipantsIds = groupInfo.participantsIDs
+        groupParticipantsIds.append(Cereal.shared.address)
 
         completeActionDelegate?.groupViewModelDidStartCreateOrUpdate()
 
-        ChatInteractor.createGroup(with: NSMutableArray(array: groupInfo.participantsIDs), name: groupInfo.title, avatar: groupInfo.avatar, completion: { [weak self] _ in
+        ChatInteractor.createGroup(with: NSMutableArray(array: groupParticipantsIds), name: groupInfo.title, avatar: groupInfo.avatar, completion: { [weak self] _ in
 
             self?.completeActionDelegate?.groupViewModelDidFinishCreateOrUpdate()
         })
@@ -87,6 +86,15 @@ extension NewGroupViewModel: GroupViewModelProtocol {
         }
         set {
             completionDelegate = newValue
+        }
+    }
+
+    var sortedMembers: [TokenUser] {
+        get {
+            return _sortedMembers
+        }
+        set {
+            _sortedMembers = newValue
         }
     }
 
@@ -110,8 +118,8 @@ extension NewGroupViewModel: GroupViewModelProtocol {
         groupInfo.notificationsOn = notificationsOn
     }
 
-    func updateParticipantsIds(to participantsIds: [String]) {
-        groupInfo.participantsIDs = participantsIDs
+    func updateRecipientsIds(to recipientsIds: [String]) {
+        groupInfo.participantsIDs = recipientsIds
     }
 
     var groupThread: TSGroupThread? { return nil }
@@ -132,5 +140,6 @@ extension NewGroupViewModel: GroupViewModelProtocol {
 
     var isDoneButtonEnabled: Bool { return groupInfo.title.length > 0 }
 
-    var participantsIDs: [String] { return groupInfo.participantsIDs }
+    var recipientsIds: [String] { return groupInfo.participantsIDs }
+    var allParticipantsIDs: [String] { return sortedMembers.map { $0.address } }
 }

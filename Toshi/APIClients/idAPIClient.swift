@@ -107,13 +107,28 @@ typealias DappCompletion = (_ dapps: [Dapp]?, _ error: ToshiError?) -> Void
                         if let updatedContact = updatedContact {
                             Yap.sharedInstance.insert(object: updatedContact.json, for: updatedContact.address, in: collectionKey)
                         }
-
                     }
                 }
             }
         }
 
         updateOperationQueue.addOperation(operation)
+    }
+
+    func updateContacts(with identifiers: [String]) {
+        fetchUsers(with: identifiers) { users, _ in
+
+            guard let fetchedUsers = users else { return }
+            guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+
+            for user in fetchedUsers {
+                if !Yap.sharedInstance.containsObject(for: user.address, in: TokenUser.storedContactKey) {
+                    Yap.sharedInstance.insert(object: user.json, for: user.address, in: TokenUser.storedContactKey)
+                }
+
+                appDelegate.contactsManager.refreshContact(user)
+            }
+        }
     }
 
     func updateContact(with identifier: String) {
@@ -133,7 +148,6 @@ typealias DappCompletion = (_ dapps: [Dapp]?, _ error: ToshiError?) -> Void
                 appDelegate.contactsManager.refreshContact(updatedContact)
             }
         }
-        
     }
 
     func fetchTimestamp(_ completion: @escaping ((_ timestamp: Int?, _ error: ToshiError?) -> Void)) {

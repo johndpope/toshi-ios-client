@@ -74,6 +74,7 @@ NS_ASSUME_NONNULL_BEGIN
     TSGroupThread *thread = [self fetchObjectWithUniqueID:[self threadIdFromGroupId:groupId] transaction:transaction];
     if (!thread) {
         thread = [[self alloc] initWithGroupId:groupId];
+        thread.isPendingAccept = YES;
         [thread saveWithTransaction:transaction];
     }
     return thread;

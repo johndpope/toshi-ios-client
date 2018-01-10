@@ -231,7 +231,7 @@ final class ChatViewModel {
                     guard let signalMessage = dbExtension.object(at: newIndexPath, with: strongSelf.mappings) as? TSMessage else { return }
 
                     DispatchQueue.main.async {
-                        let result = strongSelf.interactor.handleSignalMessage(signalMessage, shouldProcessCommands: true)
+                        let result = strongSelf.interactor.handleSignalMessage(signalMessage, shouldProcessCommands: true, shouldUpdateGroupMembers: true)
 
                         strongSelf.messages.insert(result, at: 0)
 
@@ -257,7 +257,7 @@ final class ChatViewModel {
 
                         if let index = strongSelf.messages.index(of: message) {
 
-                            let updatedMessage = strongSelf.interactor.handleSignalMessage(signalMessage, shouldProcessCommands: false)
+                            let updatedMessage = strongSelf.interactor.handleSignalMessage(signalMessage, shouldProcessCommands: true)
                             strongSelf.messages[index] = updatedMessage
                         }
                     }

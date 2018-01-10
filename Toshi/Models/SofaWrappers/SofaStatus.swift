@@ -22,6 +22,8 @@ import Foundation
 //  }
 final class SofaStatus: SofaWrapper {
     enum StatusType: String {
+        case created
+        case becameMember
         case leave
         case added
         case changePhoto
@@ -59,6 +61,10 @@ final class SofaStatus: SofaWrapper {
         guard let subject = subject else { return nil }
 
         switch statusType {
+        case .created:
+            return attributedString(for: Localized("status_type_create"), with: [""])
+        case .becameMember:
+            return attributedString(for: Localized("status_type_became_member"), with: [subject])
         case .leave:
             return attributedString(for: Localized("status_type_leave"), with: [subject])
         case .added:

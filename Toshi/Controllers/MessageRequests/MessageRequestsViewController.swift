@@ -81,15 +81,13 @@ extension MessagesRequestsViewController: UITableViewDataSource {
 
         guard let thread = dataSource.unacceptedThread(at: indexPath) else { return UITableViewCell(frame: .zero) }
 
-        var avatar: UIImage?
+        var avatar = thread.avatar() ?? UIImage(named: "avatar-placeholder")
         var subtitle = "..."
         var title = ""
 
         if thread.isGroupThread() {
-            avatar = (thread as? TSGroupThread)?.groupModel.groupImage ?? UIImage(named: "avatar-placeholder")
             title = thread.name()
         } else if let recipient = thread.recipient() {
-            avatar = AvatarManager.shared.cachedAvatar(for: recipient.avatarPath) ?? UIImage(named: "avatar-placeholder")
             title = recipient.nameOrDisplayName
         }
 

@@ -43,9 +43,9 @@ final class AvatarTitleSubtitleDoubleActionCell: BasicTableViewCell {
     }
 
     private func setupLeftImageView() {
-        leftImageView.size(CGSize(width: BasicTableViewCell.imageSize, height: BasicTableViewCell.imageSize))
+        leftImageView.size(CGSize(width: BasicTableViewCell.imageSize, height: BasicTableViewCell.imageSize), priority: .required)
         leftImageView.centerY(to: contentView)
-        leftImageView.left(to: contentView, offset: BasicTableViewCell.horizontalMargin)
+        leftImageView.left(to: contentView, offset: BasicTableViewCell.horizontalMargin, priority: .required)
         leftImageView.top(to: contentView, offset: BasicTableViewCell.imageMargin, relation: .equalOrGreater, priority: .defaultLow)
         leftImageView.bottom(to: contentView, offset: -BasicTableViewCell.imageMargin, relation: .equalOrGreater, priority: .defaultLow)
     }

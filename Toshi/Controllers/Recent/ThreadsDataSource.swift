@@ -229,13 +229,12 @@ final class ThreadsDataSource: NSObject {
                         if !Yap.sharedInstance.containsObject(for: user.address, in: ThreadsDataSource.nonContactsCollectionKey) {
                             Yap.sharedInstance.insert(object: user.json, for: user.address, in: ThreadsDataSource.nonContactsCollectionKey)
                         }
-
-                        thread.isPendingAccept = true
-                        thread.save()
                     } else {
                         IDAPIClient.shared.updateContact(with: contactIdentifier)
                     }
                 })
+            } else {
+                thread.updateGroupMembers()
             }
         }
     }
@@ -249,13 +248,9 @@ final class ThreadsDataSource: NSObject {
 
             if thread.isGroupThread() && ProfileManager.shared().isThread(inProfileWhitelist: thread) == false {
                 ProfileManager.shared().addThread(toProfileWhitelist: thread)
-
-                (thread as? TSGroupThread)?.groupModel.groupMemberIds.forEach { memberId in
-
-                    IDAPIClient.shared.updateContact(with: memberId)
-                    AvatarManager.shared.downloadAvatar(for: memberId)
-                }
             }
+
+            thread.updateGroupMembers()
         }
     }
 

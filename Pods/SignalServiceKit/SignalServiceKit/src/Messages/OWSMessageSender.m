@@ -1343,9 +1343,11 @@ NSString *const OWSMessageSenderRateLimitedException = @"RateLimitedException";
                                     customMessage:message.customMessage] save];
     } else {
         [[[TSInfoMessage alloc] initWithTimestamp:message.timestamp
+                                         authorId:@""
                                          inThread:thread
                                       messageType:TSInfoMessageTypeGroupUpdate
-                                    customMessage:message.customMessage] save];
+                                    customMessage:message.customMessage
+                             additionalInfoString:thread.name] save];
     }
 }
 

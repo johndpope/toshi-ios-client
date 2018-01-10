@@ -39,6 +39,7 @@ final class GroupInfoViewModel {
 
         groupInfo = GroupInfo()
         groupInfo.title = groupModel.groupName
+
         groupInfo.participantsIDs = groupModel.groupMemberIds
         groupInfo.avatar = groupModel.groupImage
 
@@ -55,9 +56,6 @@ final class GroupInfoViewModel {
         avatarTitleData.tag = GroupItemType.avatarTitle.rawValue
 
         let avatarTitleSectionData = TableSectionData(cellsData: [avatarTitleData])
-        let notificationsData = TableCellData(title: Localized("new_group_notifications_settings_title"), switchState: groupInfo.notificationsOn)
-        notificationsData.tag = GroupItemType.notifications.rawValue
-        let settingsSectionData = TableSectionData(cellsData: [notificationsData], headerTitle: Localized("new_group_settings_header_title"))
 
         let participantsSectionData = setupParticipantsSection()
 
@@ -66,7 +64,7 @@ final class GroupInfoViewModel {
 
         let exitGroupSectionData = TableSectionData(cellsData: [leaveGroupCellData])
 
-        models = [avatarTitleSectionData, settingsSectionData, participantsSectionData, exitGroupSectionData]
+        models = [avatarTitleSectionData, participantsSectionData, exitGroupSectionData]
     }
 
     private func setupParticipantsSection() -> TableSectionData {
@@ -74,22 +72,11 @@ final class GroupInfoViewModel {
         addParticipantsData.tag = GroupItemType.addParticipant.rawValue
 
         var participantsCellData: [TableCellData] = [addParticipantsData]
-        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
-            CrashlyticsLogger.log("Failed to access app delegate")
-            fatalError("Can't access app delegate")
-        }
 
-        let members = appDelegate.contactsManager.tokenContacts.filter { groupInfo.participantsIDs.contains($0.address) }
-        let sortedMembers = members.sorted { $0.username < $1.username }
-
+        setupSortedMembers()
+        
         for member in sortedMembers {
             let cellData = TableCellData(title: member.name, subtitle: member.displayUsername, leftImage: AvatarManager.shared.cachedAvatar(for: member.avatarPath))
-            cellData.tag = GroupItemType.participant.rawValue
-            participantsCellData.append(cellData)
-        }
-
-        if groupInfo.participantsIDs.contains(Cereal.shared.address), let user = TokenUser.current {
-            let cellData = TableCellData(title: user.name, subtitle: user.displayUsername, leftImage: AvatarManager.shared.cachedAvatar(for: user.avatarPath))
             cellData.tag = GroupItemType.participant.rawValue
             participantsCellData.append(cellData)
         }
@@ -98,6 +85,8 @@ final class GroupInfoViewModel {
         
         return TableSectionData(cellsData: participantsCellData, headerTitle: headerTitle)
     }
+
+    private var _sortedMembers: [TokenUser] = []
 
     @objc private func updateGroup() {
         guard let updatedGroupModel = TSGroupModel(title: groupInfo.title, memberIds: NSMutableArray(array: groupInfo.participantsIDs), image: groupInfo.avatar, groupId: thread.groupModel.groupId) else { return }
@@ -121,6 +110,15 @@ extension GroupInfoViewModel: GroupViewModelProtocol {
         }
     }
 
+    var sortedMembers: [TokenUser] {
+        get {
+            return _sortedMembers
+        }
+        set {
+            _sortedMembers = newValue
+        }
+    }
+
     var sectionModels: [TableSectionData] {
         return models
     }
@@ -133,8 +131,8 @@ extension GroupInfoViewModel: GroupViewModelProtocol {
         groupInfo.title = title
     }
     
-    func updateParticipantsIds(to participantsIds: [String]) {
-        groupInfo.participantsIDs.append(contentsOf: participantsIds)
+    func updateRecipientsIds(to recipientsIds: [String]) {
+        groupInfo.participantsIDs.append(contentsOf: recipientsIds)
     }
 
     func updatePublicState(to isPublic: Bool) {
@@ -160,5 +158,7 @@ extension GroupInfoViewModel: GroupViewModelProtocol {
     var errorAlertMessage: String { return Localized("toshi_generic_error") }
 
     var isDoneButtonEnabled: Bool { return groupInfo.title.length > 0 }
-    var participantsIDs: [String] { return groupInfo.participantsIDs }
+
+    var recipientsIds: [String] { return groupInfo.participantsIDs }
+    var allParticipantsIDs: [String] { return sortedMembers.map { $0.address } }
 }

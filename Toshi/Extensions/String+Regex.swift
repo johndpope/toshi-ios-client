@@ -3,7 +3,7 @@ import Foundation
 extension String {
 
     var hasAddressPrefix: Bool {
-        return starts(with: "0x")
+        return trimmingCharacters(in: .whitespacesAndNewlines).starts(with: "0x")
     }
 
     func firstMatch(pattern: String) -> NSTextCheckingResult? {

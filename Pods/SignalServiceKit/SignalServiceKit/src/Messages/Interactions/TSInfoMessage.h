@@ -27,6 +27,8 @@ typedef NS_ENUM(NSInteger, TSInfoMessageType) {
 
 @property (atomic, readonly) TSInfoMessageType messageType;
 @property (atomic, readonly) NSString *customMessage;
+@property (atomic, readonly) NSString *additionalInfoString;
+@property (atomic, readonly) NSString *authorId;
 
 - (instancetype)initWithCoder:(NSCoder *)coder NS_DESIGNATED_INITIALIZER;
 
@@ -38,6 +40,13 @@ typedef NS_ENUM(NSInteger, TSInfoMessageType) {
                          inThread:(TSThread *)thread
                       messageType:(TSInfoMessageType)infoMessage
                     customMessage:(NSString *)customMessage;
+
+- (instancetype)initWithTimestamp:(uint64_t)timestamp
+                         authorId:(NSString *)authorId
+                         inThread:(TSThread *)thread
+                      messageType:(TSInfoMessageType)infoMessage
+                    customMessage:(NSString *)customMessage
+             additionalInfoString:(NSString *)additionalInfoString;
 
 - (instancetype)initWithTimestamp:(uint64_t)timestamp
                          inThread:(nullable TSThread *)thread
